@@ -29,7 +29,18 @@
 #include <GCS_MAVLink/GCS_MAVLink.h>
 #include <AP_InertialSensor/AP_InertialSensor_rate_config.h>
 
+#if defined(HAL_BOREALIS_BENCH_TEST)
+#include <AP_Baro/AP_Baro.h>
+#include <RC_Channel/RC_Channel.h>
+extern void borealis_bench_output_timeout();
+#endif
+
 #include <stdio.h>
+#include <string.h>
+
+#if defined(HAL_BOREALIS_BENCH_TEST)
+bool borealis_bench_ready;
+#endif
 
 #ifndef BOARD_TYPE_DEFAULT
 #define BOARD_TYPE_DEFAULT PX4_BOARD_AUTO
@@ -503,6 +514,13 @@ bool AP_BoardConfig::_in_error_loop;
 void AP_BoardConfig::throw_error(const char *err_type, const char *fmt, va_list arg)
 {
     _in_error_loop = true;
+#if defined(HAL_BOREALIS_BENCH_TEST)
+    // This image is only for bench checks before the IMU is populated.
+    // No flight loop runs, and PWM is enabled only by a bounded test command.
+    borealis_bench_ready = strstr(fmt, "INS: unable to initialise driver") != nullptr;
+    hal.rcout->force_safety_on();
+    uint32_t last_bench_read_ms = 0;
+#endif
     /*
       to give the user the opportunity to connect to USB we keep
       repeating the error.  The mavlink delay callback is initialised
@@ -512,6 +530,14 @@ void AP_BoardConfig::throw_error(const char *err_type, const char *fmt, va_list 
     uint32_t last_print_ms = 0;
     while (true) {
         uint32_t now = AP_HAL::millis();
+#if defined(HAL_BOREALIS_BENCH_TEST)
+        borealis_bench_output_timeout();
+        if (borealis_bench_ready && now - last_bench_read_ms >= 20) {
+            last_bench_read_ms = now;
+            AP::baro().update();
+            rc().read_input();
+        }
+#endif
         if (now - last_print_ms >= 5000) {
             last_print_ms = now;
             char printfmt[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN+2];
@@ -530,6 +556,11 @@ void AP_BoardConfig::throw_error(const char *err_type, const char *fmt, va_list 
                 gcs().send_textv(MAV_SEVERITY_CRITICAL, printfmt, arg_copy);
                 va_end(arg_copy);
             }
+#if defined(HAL_BOREALIS_BENCH_TEST)
+            if (borealis_bench_ready) {
+                gcs().send_text(MAV_SEVERITY_WARNING, "BOREALIS BENCH: outputs test-only");
+            }
+#endif
 #endif
         }
 #if HAL_GCS_ENABLED
