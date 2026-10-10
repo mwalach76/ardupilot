@@ -23,6 +23,7 @@
 #include <GCS_MAVLink/GCS.h>
 
 #include "AP_InertialSensor_BMI160.h"
+#include "AP_InertialSensor_LSM6DSO32.h"
 #include "AP_InertialSensor_BMI270.h"
 #include "AP_InertialSensor_Backend.h"
 #include "AP_InertialSensor_L3G4200D.h"

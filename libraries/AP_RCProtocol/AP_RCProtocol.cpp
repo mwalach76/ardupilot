@@ -342,6 +342,10 @@ static const AP_RCProtocol::SerialConfig serial_configs[] {
     { 115200,  0,   1, true },
     // SBUS settings, even parity, 2 stop bits:
     { 100000,  2,   2, true },
+#if defined(HAL_BOREALIS_V2_DIAGNOSTIC) && HAL_BOREALIS_V2_DIAGNOSTIC
+    // Rx V4 SAMD21 UART connects directly to USART6 without an inverter.
+    { 100000,  2,   2, false },
+#endif
 #if AP_RCPROTOCOL_FASTSBUS_ENABLED
     // FastSBUS:
     { 200000,  2,   2, true },

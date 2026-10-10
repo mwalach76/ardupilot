@@ -17,6 +17,10 @@
  */
 
 #include "AP_BoardConfig.h"
+#if defined(HAL_BOREALIS_V2_DIAGNOSTIC) && HAL_BOREALIS_V2_DIAGNOSTIC
+#include <AP_InertialSensor/AP_InertialSensor_LSM6DSO32.h>
+#include <AP_Baro/AP_Baro.h>
+#endif
 
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL.h>
@@ -527,9 +531,20 @@ void AP_BoardConfig::throw_error(const char *err_type, const char *fmt, va_list 
       before this, so the user can change parameters (and in
       particular BRD_TYPE if needed)
     */
+#if defined(HAL_BOREALIS_V2_DIAGNOSTIC) && HAL_BOREALIS_V2_DIAGNOSTIC
+    uint32_t last_v2_baro_ms = 0;
+    const bool v2_baro_ready = strstr(fmt, "INS: unable to initialise driver") != nullptr;
+#endif
     uint32_t last_print_ms = 0;
     while (true) {
         uint32_t now = AP_HAL::millis();
+#if defined(HAL_BOREALIS_V2_DIAGNOSTIC) && HAL_BOREALIS_V2_DIAGNOSTIC
+        // Keep pressure telemetry available for bench checks while INS blocks startup.
+        if (v2_baro_ready && now - last_v2_baro_ms >= 20) {
+            last_v2_baro_ms = now;
+            AP::baro().update();
+        }
+#endif
 #if defined(HAL_BOREALIS_BENCH_TEST)
         borealis_bench_output_timeout();
         if (borealis_bench_ready && now - last_bench_read_ms >= 20) {
@@ -549,6 +564,11 @@ void AP_BoardConfig::throw_error(const char *err_type, const char *fmt, va_list 
                 va_end(arg_copy);
             }
 #if HAL_GCS_ENABLED
+#if defined(HAL_BOREALIS_V2_DIAGNOSTIC) && HAL_BOREALIS_V2_DIAGNOSTIC
+            GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_InertialSensor_LSM6DSO32::diagnostic);
+            GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_InertialSensor_LSM6DSO32::diagnostic_extra);
+            GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_InertialSensor_LSM6DSO32::diagnostic_gpio);
+#endif
             hal.util->snprintf(printfmt, sizeof(printfmt), "%s: %s", err_type, fmt);
             {
                 va_list arg_copy;
