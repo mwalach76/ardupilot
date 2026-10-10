@@ -1093,6 +1093,9 @@ private:
     void afs_fs_check(void);
 #endif
     void one_second_loop(void);
+#ifdef HAL_BOARD_IMU_LED_PIN
+    void update_board_health_leds();
+#endif
     void three_hz_loop(void);
 #if AP_AIRSPEED_AUTOCAL_ENABLE
     void airspeed_ratio_update(void);
@@ -1125,6 +1128,9 @@ private:
     void init_rc_out_main();
     void init_rc_out_aux();
     void read_radio();
+#ifdef HAL_BOARD_ARM_BUTTON_PIN
+    void update_board_arm_button();
+#endif
     int16_t rudder_input(void);
     void control_failsafe();
     void trim_radio();

@@ -1,4 +1,7 @@
 #include "Plane.h"
+#ifdef HAL_BOARD_ARM_BUTTON_PIN
+#include "board_arm_button.h"
+#endif
 
 //Function that will read the radio data, limit servos and trigger a failsafe
 // ----------------------------------------------------------------------------
@@ -115,6 +118,28 @@ void Plane::init_rc_out_aux()
     // allows any VTOL motors to shut off
     SRV_Channels::setup_failsafe_trim_all_non_motors();
 }
+
+#ifdef HAL_BOARD_ARM_BUTTON_PIN
+void Plane::update_board_arm_button()
+{
+    static BoardArmButton board_button;
+    const uint32_t now_ms = AP_HAL::millis();
+    const bool pressed = hal.gpio->read(HAL_BOARD_ARM_BUTTON_PIN) == 0;
+    // Check actual RC health, since failsafe handling can set control_in to zero.
+    const bool allowed = rc().has_valid_input() && !rc_failsafe_active() &&
+        uint32_t(now_ms - rc().last_input_ms()) <= 300 &&
+        channel_throttle->get_control_in() == 0 && !is_flying() &&
+        (control_mode == &mode_manual || control_mode == &mode_fbwa);
+    if (!board_button.update(now_ms, pressed, allowed)) {
+        return;
+    }
+    if (arming.is_armed()) {
+        arming.disarm(AP_Arming::Method::AUXSWITCH);
+    } else {
+        arming.arm(AP_Arming::Method::AUXSWITCH);
+    }
+}
+#endif
 
 void Plane::read_radio()
 {
