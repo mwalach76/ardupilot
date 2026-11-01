@@ -21,6 +21,9 @@
 #include <AP_InertialSensor/AP_InertialSensor_LSM6DSO32.h>
 #include <AP_Baro/AP_Baro.h>
 #endif
+#if defined(HAL_ASCEND_BARO_DIAGNOSTIC)
+#include <AP_Baro/AP_Baro_MS5611.h>
+#endif
 
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL.h>
@@ -568,6 +571,10 @@ void AP_BoardConfig::throw_error(const char *err_type, const char *fmt, va_list 
             GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_InertialSensor_LSM6DSO32::diagnostic);
             GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_InertialSensor_LSM6DSO32::diagnostic_extra);
             GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_InertialSensor_LSM6DSO32::diagnostic_gpio);
+#endif
+#if defined(HAL_ASCEND_BARO_DIAGNOSTIC)
+            GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_Baro_MS56XX::diagnostic[0]);
+            GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "%s", AP_Baro_MS56XX::diagnostic[1]);
 #endif
             hal.util->snprintf(printfmt, sizeof(printfmt), "%s: %s", err_type, fmt);
             {
