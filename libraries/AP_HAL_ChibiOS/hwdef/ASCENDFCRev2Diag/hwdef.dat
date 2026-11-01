@@ -1,0 +1,6 @@
+# ASCEND FC Rev.2 bench diagnostic: reports raw MS5611 PROM words while
+# startup is blocked, and lets startup continue without a barometer so the
+# IMU and magnetometer can be checked. Not for flight.
+include ../ASCENDFCRev2/hwdef.dat
+define HAL_ASCEND_BARO_DIAGNOSTIC 1
+define HAL_BARO_ALLOW_INIT_NO_BARO 1
