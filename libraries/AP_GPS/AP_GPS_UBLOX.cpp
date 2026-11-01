@@ -1437,7 +1437,11 @@ AP_GPS_UBLOX::_parse_gps(void)
             // check for F9 and M9. The F9 does not respond to SVINFO,
             // so we need to use MON_VER for hardware generation
             if (strncmp(_version.hwVersion, "00190000", 8) == 0) {
-                if (strncmp(_version.swVersion, "EXT CORE 1", 10) == 0) {
+                // The NEO-M9V (dead reckoning) also reports EXT CORE 1, like
+                // an F9, but has no F9 configuration such as time mode, so
+                // trust its module name first.
+                const bool m9_module = strncmp(_module, "NEO-M9", 6) == 0;
+                if (strncmp(_version.swVersion, "EXT CORE 1", 10) == 0 && !m9_module) {
                     // a F9
                     if (_hardware_generation != UBLOX_F9) {
                         // need to ensure time mode is correctly setup on F9
@@ -1452,7 +1456,7 @@ AP_GPS_UBLOX::_parse_gps(void)
                         _hardware_variant = UBLOX_F9_NEO;
                     }
                 }
-                if (strncmp(_version.swVersion, "EXT CORE 4", 10) == 0) {
+                if (strncmp(_version.swVersion, "EXT CORE 4", 10) == 0 || m9_module) {
                     // a M9
                     _hardware_generation = UBLOX_M9;
                 }
