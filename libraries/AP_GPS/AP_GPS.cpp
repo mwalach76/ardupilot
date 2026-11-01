@@ -38,6 +38,7 @@
 #include "AP_GPS_SBP2.h"
 #include "AP_GPS_SIRF.h"
 #include "AP_GPS_UBLOX.h"
+#include "AP_GPS_UBLOX_I2C.h"
 #include "AP_GPS_MAV.h"
 #include "AP_GPS_MSP.h"
 #include "AP_GPS_ExternalAHRS.h"
@@ -349,6 +350,15 @@ void AP_GPS::init()
             uart_idx++;
         }
     }
+
+#if AP_GPS_UBLOX_I2C_ENABLED
+    // a board whose u-blox receiver is wired only over I2C: use it for the
+    // first GPS unless a serial port has been assigned to that GPS
+    if (_port[0] == nullptr && needs_uart(params[0].type)) {
+        ublox_i2c_port = AP_GPS_UBLOX_I2C_Port::create(HAL_GPS_UBLOX_I2C_BUS, HAL_GPS_UBLOX_I2C_ADDR);
+        _port[0] = ublox_i2c_port;
+    }
+#endif
     _last_instance_swap_ms = 0;
 
     // prep the state instance fields
@@ -694,6 +704,20 @@ AP_GPS_Backend *AP_GPS::_detect_instance(const uint8_t instance)
         // UART not available
         return nullptr;
     }
+
+#if AP_GPS_UBLOX_I2C_ENABLED
+    // An I2C (DDC) link has no baud rate to detect and the receiver's default
+    // I2C output is NMEA, so baud-cycling detection never matches it. The
+    // receiver sending data is the detection; the u-blox driver then
+    // configures its UBX output on this port.
+    if (port == ublox_i2c_port && (type == GPS_TYPE_AUTO || type == GPS_TYPE_UBLOX)) {
+        if (port->available() == 0) {
+            return nullptr;
+        }
+        dstate->auto_detected_baud = false; // specified, not detected
+        return NEW_NOTHROW AP_GPS_UBLOX(*this, params[instance], state[instance], port, GPS_ROLE_NORMAL);
+    }
+#endif
 
     // all remaining drivers automatically cycle through baud rates to detect
     // the correct baud rate, and should have the selected baud broadcast

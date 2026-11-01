@@ -716,6 +716,11 @@ private:
     static const char _initialisation_blob[];
     static const char _initialisation_raw_blob[];
 
+#if AP_GPS_UBLOX_I2C_ENABLED
+    // receiver wired over I2C, used as the first GPS's port
+    class AP_GPS_UBLOX_I2C_Port *ublox_i2c_port = nullptr;
+#endif
+
     void detect_instance(uint8_t instance);
     // run detection step for one GPS instance. If this finds a GPS then it
     // will return it - otherwise nullptr

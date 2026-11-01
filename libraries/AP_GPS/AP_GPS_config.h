@@ -101,6 +101,17 @@
   #define AP_GPS_UBLOX_CFGV2_ENABLED 0
 #endif
 
+// u-blox receiver wired only over I2C (DDC); boards set the bus and address
+#ifndef AP_GPS_UBLOX_I2C_ENABLED
+  #define AP_GPS_UBLOX_I2C_ENABLED 0
+#endif
+#if AP_GPS_UBLOX_I2C_ENABLED && !AP_GPS_UBLOX_ENABLED
+  #error AP_GPS_UBLOX_I2C_ENABLED requires AP_GPS_UBLOX_ENABLED
+#endif
+#ifndef HAL_GPS_UBLOX_I2C_ADDR
+  #define HAL_GPS_UBLOX_I2C_ADDR 0x42
+#endif
+
 #ifndef AP_GPS_RTCM_DECODE_ENABLED
   #define AP_GPS_RTCM_DECODE_ENABLED HAL_PROGRAM_SIZE_LIMIT_KB > 1024
 #endif
