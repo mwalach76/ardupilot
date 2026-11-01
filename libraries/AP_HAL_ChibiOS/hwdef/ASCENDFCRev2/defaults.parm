@@ -5,3 +5,7 @@ SERVO3_FUNCTION 19
 SERVO4_FUNCTION 21
 SERVO5_FUNCTION 0
 SERVO6_FUNCTION 0
+# The onboard GPS works over I2C but has not obtained a fix on Rev.2 (antenna
+# ground clearance to be fixed in the next revision), so it is off by default
+# and not required for arming. Set GPS1_TYPE 1 to use it.
+GPS1_TYPE 0
