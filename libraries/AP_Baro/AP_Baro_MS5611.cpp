@@ -200,6 +200,10 @@ uint32_t AP_Baro_MS56XX::_read_adc()
     return (val[0] << 16) | (val[1] << 8) | val[2];
 }
 
+#if defined(HAL_ASCEND_BARO_DIAGNOSTIC)
+char AP_Baro_MS56XX::diagnostic[2][50] = { "MS5611 PROM: probe not reached", "" };
+#endif
+
 bool AP_Baro_MS56XX::_read_prom_5611(uint16_t prom[8])
 {
     /*
@@ -216,6 +220,17 @@ bool AP_Baro_MS56XX::_read_prom_5611(uint16_t prom[8])
             all_zero = false;
         }
     }
+
+#if defined(HAL_ASCEND_BARO_DIAGNOSTIC)
+    hal.util->snprintf(diagnostic[0], sizeof(diagnostic[0]), "MS5611 PROM0-3 %04X %04X %04X %04X",
+                       prom[0], prom[1], prom[2], prom[3]);
+    uint16_t crc_prom[8];
+    memcpy(crc_prom, prom, sizeof(crc_prom));
+    crc_prom[7] &= 0xff00;
+    hal.util->snprintf(diagnostic[1], sizeof(diagnostic[1]), "MS5611 PROM4-7 %04X %04X %04X %04X CRC %s",
+                       prom[4], prom[5], prom[6], prom[7],
+                       (prom[7] & 0xf) == crc_crc4(crc_prom) ? "ok" : "bad");
+#endif
 
     if (all_zero) {
         return false;

@@ -40,6 +40,11 @@ public:
 
     AP_Baro_MS56XX(AP_Baro &baro, AP_HAL::Device &dev);
 
+#if defined(HAL_ASCEND_BARO_DIAGNOSTIC)
+    // Raw PROM words and CRC result from the last probe, for bench bring-up.
+    static char diagnostic[2][50];
+#endif
+
 protected:
 
     // convenience methods for derivative classes to call.  Will free
