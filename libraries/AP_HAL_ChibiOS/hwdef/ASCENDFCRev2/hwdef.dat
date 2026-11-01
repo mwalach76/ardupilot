@@ -41,7 +41,11 @@ PD4 UNUSED_CS OUTPUT HIGH
 PD5 IMU_CS CS
 SPIDEV ms5611 SPI1 DEVID1 BARO_CS MODE3 1*MHZ 10*MHZ
 SPIDEV lsm6dso32 SPI2 DEVID2 IMU_CS MODE3 100*KHZ 500*KHZ
-IMU LSM6DSO32 SPI:lsm6dso32 ROTATION_NONE
+# Sensor rotations make AHRS_ORIENTATION=0 the standard mounting: components
+# up, I2C header forward, servo header aft. Measured on hardware 2026-11-01:
+# the IMU needed AHRS_ORIENTATION=14, and onboard compass calibration then
+# found the MMC5983 needed a further ROLL_180_YAW_90 (confidence 30.5).
+IMU LSM6DSO32 SPI:lsm6dso32 ROTATION_ROLL_180_YAW_270
 define HAL_BOREALIS_V2_DIAGNOSTIC 1
 BARO MS5611 SPI:ms5611
 
@@ -50,7 +54,7 @@ BARO MS5611 SPI:ms5611
 I2C_ORDER I2C1
 PB8 I2C1_SCL I2C1
 PB9 I2C1_SDA I2C1
-COMPASS MMC5XX3 I2C:0:0x30 false ROTATION_NONE
+COMPASS MMC5XX3 I2C:0:0x30 false ROTATION_YAW_180
 
 # Active-high status LED and four live sensor-health indicators.
 PC12 LED OUTPUT LOW GPIO(90) # BLINK, MCU pin 80
